@@ -71,9 +71,9 @@ class CrossValidation:
 
 
 if __name__ == "__main__":
-    df = pd.read_csv("../input/train_multilabel.csv")
-    cv = CrossValidation(df, shuffle=True, target_cols=["attribute_ids"], 
-                         problem_type="multilabel_classification", multilabel_delimiter=" ")
+    df = pd.read_csv("../input/train_reg.csv")
+    cv = CrossValidation(df, shuffle=True, target_cols=["SalePrice"], 
+                         problem_type="single_col_regression")
     df_split = cv.split()
     print(df_split.head())
     print(df_split.kfold.value_counts())
