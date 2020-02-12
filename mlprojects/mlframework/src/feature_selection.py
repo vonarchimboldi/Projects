@@ -1,17 +1,20 @@
 from sklearn.linear_model import LinearRegression
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy
 from scipy.cluster import hierarchy as hc
 from sklearn.ensemble import RandomForestClassifier
 from ../categorical import CategoricalFeatures
+from ../utils import returnhclusters, returnvariableimps
 
 class Feature_Selection:
 
-    def __init__(self, df):
+    def __init__(self, df, selector, vif_threshold = 0.5, mixed = False):
         self.dataframe = df
+        self.selector = selector
+        self.threshold = vif_threshold
+        self.mixed = mixed
 
-    def _vif_selector(self, threshold, mixed = False):
+    def _vif_selector(self):
         
         cat_cols = [c for c in self.dataframe.drop([target], axis = 1).columns if self.dataframe[c].dtype != 'int64']
         int_cols = [c for c in self.dataframe.drop([target], axis = 1).columns if self.dataframe[c].dtype == 'int64']
@@ -22,16 +25,16 @@ class Feature_Selection:
             lm = LinearRegression().fit(self.dataframe.drop(i, axis = 1), self.dataframe[i])
             r2[i] = lm.score(self.dataframe.drop(i, axis = 1), self.dataframe[i])
             
-        to_drop = len([ x for x in list(r2.values()) if x > threshold])
+        to_drop = len([ x for x in list(r2.values()) if x > self.threshold])
         
-        if mixed = False:
+        if self.mixed = False:
             return sorted(r2.keys(), key = lambda v: v[1], reverse = True)[to_drop:] + cat_cols
         
         return sorted(r2.keys(), key = lambda v: v[1], reverse = True)[to_drop:]
 
     def _hc_selector(self):
         
-        cols = [c for c in df.columns if not self.dataframe[c].dtype in ('int64', 'float64')]
+        cols = [c for c in self.dataframe.columns if not self.dataframe[c].dtype in ('int64', 'float64')]
         cat_feats = CategoricalFeatures(self.dataframe, 
                                     categorical_features=cols, 
                                     encoding_type="label",
@@ -39,12 +42,41 @@ class Feature_Selection:
 
 
         df_transformed = cat_feats.fit_transform()
-        corr = np.round(scipy.stats.spearmanr(df_transformed).correlation, 4)
-        cluster = AgglomerativeClustering(n_clusters=4, affinity='precomputed', linkage='average')
-        clusters = cluster.fit_predict(corr)
-        imps = dict(zip(df_transformed.drop(['y'], axis = 1).columns, zip(clf.feature_importances_, clusters)))
+
+        clusters = returnhclusters(df_transofrmed)
+        feat_imps = returnvariableimps(df_transformed)
+
+        imps = dict(zip(df_transformed.drop(['target'], axis = 1).columns, zip(feat_imps, clusters)))
         imps_df = pd.DataFrame(imps).transpose().reset_index()
         to_drop = list(imps_df.groupby(1)['index'].agg({0: 'min'})[0])
         
-        return df.transformed.drop(to_drop, axis = 1)
+        return df.transformed.drop(to_drop, axis = 1).columns
 
+    def _mixed_selector(self):
+        int_cols = _vif_selector()
+        caat_cols = _hc_selector()
+
+        return int_cols + cat_cols
+
+    def get_features(self):
+
+        if self.selector == 'vif':
+            return _vif_selector()
+        elif self.selector == 'hclust':
+            return _hc_selector()
+        elif self.selector == 'mixed':
+            return _mixed_selector
+        else:
+            raiseException('Selection Type Not Understood!')
+
+
+if __name__ == "__main__":
+    df = pd.read_csv("../input/bank_train.csv")
+    
+    feat_selector = Feature_Selection(df, 
+                             selector=mixed, 
+                             threshold=0.2,
+                             mixed=True)
+
+    full_data_transformed = feat_selector.get_features()
+    
