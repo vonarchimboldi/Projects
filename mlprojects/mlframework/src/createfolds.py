@@ -1,8 +1,11 @@
+import os
 import pandas as pd
 from sklearn import model_selection
 
+FEATURE_SELECTION = os.environ.get("SELECTION")
+
 if __name__ == '__main__':
-    df = pd.read_csv('input/train.csv')
+    df = pd.read_csv('input/bank-train.csv')
     df['kfold'] = -1
 
     df = df.sample(frac = 1).reset_index(drop = True)

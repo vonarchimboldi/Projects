@@ -4,8 +4,8 @@ import pandas as pd
 import scipy
 from scipy.cluster import hierarchy as hc
 from sklearn.ensemble import RandomForestClassifier
-from categorical import CategoricalFeatures
-from utils import returnhclusters, returnvariableimps
+from .categorical import CategoricalFeatures
+from .utils import returnhclusters, returnvariableimps
 
 class Feature_Selection:
     def __init__(self, df, selector, vif_threshold = 0.5, mixed = False):

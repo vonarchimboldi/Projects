@@ -1,6 +1,5 @@
 from sklearn import preprocessing
 
-
 class CategoricalFeatures:
     def __init__(self, df, categorical_features, encoding_type, handle_na=False):
         """
