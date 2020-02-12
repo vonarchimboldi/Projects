@@ -2,6 +2,7 @@ import numpy as np
 import scipy
 from scipy.cluster import hierarchy as hc
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.cluster import AgglomerativeClustering
 
 def returnhclusters(df):
     corr = np.round(scipy.stats.spearmanr(df).correlation, 4)
@@ -9,7 +10,7 @@ def returnhclusters(df):
     clusters = cluster.fit_predict(corr)
     return clusters
 
-def returnvariableimps(df, target):
+def returnvariableimps(df):
     clf = RandomForestClassifier(n_estimators = 50, n_jobs = -1, verbose = 1)
     clf.fit(df.drop(['target'], axis = 1), df['target'])
 
