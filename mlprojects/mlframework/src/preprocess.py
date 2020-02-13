@@ -1,7 +1,7 @@
 from .feature_selection import Feature_Selection
 from .categorical import CategoricalFeatures
 
-def filter_df(df):
+def filter_df(df, selector):
     feat_selector = Feature_Selection(df, 
                              selector = "vif", 
                              vif_threshold =0.2,

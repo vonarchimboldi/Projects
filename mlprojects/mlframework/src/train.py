@@ -13,6 +13,7 @@ TEST_DATA = os.environ.get("TEST_DATA")
 FOLD = int(os.environ.get("FOLD"))
 MODEL = os.environ.get("MODEL")
 FEATURE_SELECTION = os.environ.get("FEATURE_SELECTION")
+selector = os.environ.get("FEATURE_SELECTION_METHOD")
 
 FOLD_MAPPPING = {
     0: [1, 2, 3, 4],
@@ -32,11 +33,13 @@ if __name__ == "__main__":
     yvalid = valid_df.target.values
 
     if FEATURE_SELECTION == 'YES':
-        cols = filter_df(df)
+        cols = filter_df(df, selector)
+    else:
+        cols = list(df.drop(['target', 'kfold'], axis = 1).columns)
 
     train_df = encode_df(train_df)
     valid_df = encode_df(valid_df)
-    
+
     train_df = train_df[[*cols, 'target', 'kfold']]
     valid_df = valid_df[[*cols, 'target', 'kfold']]
 
