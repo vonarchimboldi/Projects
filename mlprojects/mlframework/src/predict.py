@@ -54,4 +54,4 @@ def predict():
 if __name__ == "__main__":
     submission, feat_imps = predict()
     submission.to_csv(f"models/{MODEL}_{selector}.csv", index=False)
-    feat_imps.to_csv(f"models/{MODEL}_{selector}_feat_imps.csv", index=False)
+    feat_imps.to_csv(f"models/{MODEL}_{selector}_feat_imps_adj.csv", index=False)

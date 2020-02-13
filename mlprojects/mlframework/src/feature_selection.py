@@ -23,7 +23,7 @@ class Feature_Selection:
         for i in int_cols:
             df = self.dataframe[int_cols]
             lm = LinearRegression().fit(df.drop(i, axis = 1), df[i])
-            r2[i] = lm.score(df.drop(i, axis = 1), df[i])
+            r2[i] = 1/(1- lm.score(df.drop(i, axis = 1), df[i])**2)
             
         to_drop = len([ x for x in list(r2.values()) if x > self.threshold])
         

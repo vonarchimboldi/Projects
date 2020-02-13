@@ -35,7 +35,7 @@ if __name__ == "__main__":
     if FEATURE_SELECTION == 'YES':
         cols = filter_df(df, selector)
     else:
-        cols = list(df.drop(['target', 'kfold'], axis = 1).columns)
+        cols = list(df.drop(['target', 'duration', 'kfold'], axis = 1).columns)
 
     train_df = encode_df(train_df)
     valid_df = encode_df(valid_df)

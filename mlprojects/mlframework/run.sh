@@ -1,7 +1,7 @@
 export TRAINING_DATA=input/train_folds.csv
 export TEST_DATA=input/bank-test.csv
-export FEATURE_SELECTION='YES'
-export FEATURE_SELECTION_METHOD='hclust'
+export FEATURE_SELECTION='NO'
+export FEATURE_SELECTION_METHOD='mixed'
 export MODEL=$1
 
 #FOLD=0 python -m src.train
