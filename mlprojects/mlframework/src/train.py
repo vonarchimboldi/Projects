@@ -49,11 +49,20 @@ if __name__ == "__main__":
     valid_df = valid_df[train_df.columns]
 
     # data is ready to train
-    clf = dispatcher.MODELS[MODEL]
-    clf.fit(train_df, ytrain)
-    preds = clf.predict_proba(valid_df)[:, 1]
-    print(metrics.roc_auc_score(yvalid, preds))
+    model = dispatcher.MODELS[MODEL]
+    model.fit(train_df, ytrain)
+
+    if problem_type == 'regression':
+        preds = model.predict(valid_df)
+        print(metrics.rmse(yvalid, preds))
+
+    else:
+        preds = model.predict_proba(valid_df)[:, 1]
+        print(metrics.roc_auc_score(yvalid, preds))
 
     #joblib.dump(label_encoders, f"models/{MODEL}_{FOLD}_label_encoder.pkl")
-    joblib.dump(clf, f"models/{MODEL}_{FOLD}.pkl")
+    if loss == 'quantile':
+        joblib.dump(model, f"models/{MODEL}_{FOLD}_{QUANTILE}.pkl")
+        
+    joblib.dump(model, f"models/{MODEL}_{FOLD}.pkl")
     joblib.dump(train_df.columns, f"models/{MODEL}_{FOLD}_columns.pkl")
