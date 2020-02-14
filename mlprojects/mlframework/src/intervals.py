@@ -1,8 +1,10 @@
+import os
 from preprocess import encode_df
 import forestci
 from nonconformist.cp import IcpClassifier, IcpRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.neighbors import KNeighborsRegressor
 from nonconformist.nc import NcFactory
 import pandas as pd
 import numpy as np
@@ -35,13 +37,13 @@ class UncertaintyQuantifier():
     def _quantile_interval(self):
 
         upper = self.model.predict(self.testX)
-        model.set_params(alpha=1.0 - alpha)
-        lower = model.predict(self.testX)
+        self.model.set_params(alpha=1.0 - alpha)
+        lower = self.model.predict(self.testX)
         sub = pd.DataFrame(np.column_stack((test_idx, target, lower, upper)), columns=["id", "target", "lower", "upper"])
 
         return sub
 
-    def _conformal_interval():
+    def _conformal_interval(self):
 
         if problem_type == 'classification':
         
@@ -76,27 +78,27 @@ class UncertaintyQuantifier():
 
             return prediction
 
-    def _jacknife_interval():
+    def _jacknife_interval(self):
 
         V_IJ_unbiased = fci.random_forest_error(self.model, self.trainX, self.testX)
 
         return V_IJ_unbiased
 
-    def get_interval():
+    def get_interval(self):
 
-        if interval_type == 'bootstrap':
+        if self.interval_type == 'bootstrap':
             if self.problem_type == 'regression':
                 return self._bootstrap_interval()
             else:
                 raise Exception('Cannot be used for this problem type!')
 
-        elif interval_type == 'quantile':
+        elif self.interval_type == 'quantile':
             if self.problem_type == 'regression':
                 return self._quantile_interval()
             else:
                 raise Exception('Cannot be used for this problem type!')
 
-        elif interval_type == 'conformal':
+        elif self.interval_type == 'conformal':
             return self._conformal_interval()
         elif:
             return self._jacknife_interval()
@@ -123,8 +125,7 @@ class UncertaintyQuantifier():
         df_test_target = df_test['target']
         df_test = df_test[cols]
         
-        uc_quantifier = UncertaintyQuantifier(df,
-                                model = model,
+        uc_quantifier = UncertaintyQuantifier(model = model,
                                 problem_type = "classification", 
                                 interval_type = "conformal",
                                 trainX = df_train,
@@ -132,7 +133,6 @@ class UncertaintyQuantifier():
                                 calX = df_cal,
                                 calY = df_cal_target,
                                 testX = df_test,
-                                testY = df_test_target,
-                                Calibration = CALIBRATION)
+                                testY = df_test_target)
 
         interval = uc_quantifier.get_interval()

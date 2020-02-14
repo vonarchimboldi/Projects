@@ -40,10 +40,7 @@ def predict():
         df = df[cols]
 
         if problem_type == 'regression':
-            if loss == 'QUANTILE':
-                sub = get_intervals_df(df, model, alpha)
-            else:
-                preds = model.predict(df)
+            preds = model.predict(df)
         else:
             preds = model.predict_proba(df)[:, 1]
 
