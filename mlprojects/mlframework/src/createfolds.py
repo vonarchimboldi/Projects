@@ -16,11 +16,14 @@ if __name__ == '__main__':
     df['kfold'] = -1
     df = df.sample(frac = 1).reset_index(drop = True)
 
-    kf = model_selection.StratifiedKFold(n_splits = 2, shuffle = False, random_state = True)
+    df, df_valid = model_selection.train_test_split(df, shuffle = True, stratify = df['target'], test_size = 0.3)
+    df_valid.to_csv('input/validation_set.csv', index = False)
 
-    for fold, (train_idx, val_idx) in enumerate(kf.split(X = df, y = df.target.values)):
-        print(len(train_idx), len(val_idx))
-        df.loc[val_idx, 'kfold'] = fold
+    #kf = model_selection.StratifiedKFold(n_splits = 2, shuffle = False, random_state = True)
+
+    #for fold, (train_idx, val_idx) in enumerate(kf.split(X = df, y = df.target.values)):
+     #   print(len(train_idx), len(val_idx))
+      #  df.loc[val_idx, 'kfold'] = fold
 
     df.to_csv('input/train_folds.csv', index = False)
     

@@ -11,9 +11,10 @@ from .preprocess import filter_df, encode_df
 TEST_DATA = os.environ.get("TEST_DATA")
 MODEL = os.environ.get("MODEL")
 FEATURE_SELECTION = os.environ.get("FEATURE_SELECTION")
-NUM_FOLDS = os.environ.get("NUM_FOLDS")
+NUM_FOLDS = int(os.environ.get("NUM_FOLDS"))
 alpha = os.environ.get("alpha")
 loss = os.environ.get("LOSS")
+problem_type = os.environ.get("PROBLEM_TYPE")
 
 if FEATURE_SELECTION == 'YES':
     selector = os.environ.get("FEATURE_SELECTION_METHOD")
