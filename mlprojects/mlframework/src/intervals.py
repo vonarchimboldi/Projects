@@ -11,7 +11,7 @@ import numpy as np
 import joblib
 
 CALIBRATION = os.environ.get('CALIBRATION')
-MODEL = "randomforest"
+MODEL = os.environ.get("MODEL")
 FOLD = 1
 TRAINING_DATA = os.environ.get("TRAINING_DATA")
 VALIDATION_DATA = os.environ.get("VALIDATION_DATA")
@@ -36,22 +36,28 @@ class UncertaintyQuantifier():
         percentile = 95
         lower_bound = []
         upper_bound = []
+        #print(len(self.testX))
         for x in range(len(self.testX)):
             preds = []
+            #print(x)
             for pred in self.model.estimators_:
-                preds.append(pred.predict(self.testX[x])[0])
+                #print(pred.predict(self.testX))
+                preds.append(pred.predict(np.array(self.testX.loc[x]).reshape(1, -1)))
+                #print(self.testX.shape)
             lower_bound.append(np.percentile(preds, (100 - percentile) / 2. ))
             upper_bound.append(np.percentile(preds, 100 - (100 - percentile) / 2.))
-        return lower_bound, upper_bound
+        #return lower_bound, upper_bound
 
     def _quantile_interval(self):
 
+        alpha = 0.95
         upper = self.model.predict(self.testX)
         self.model.set_params(alpha=1.0 - alpha)
+        self.model.fit(self.trainX, self.trainY)
         lower = self.model.predict(self.testX)
-        sub = pd.DataFrame(np.column_stack((test_idx, target, lower, upper)), columns=["id", "target", "lower", "upper"])
+        #sub = pd.DataFrame(np.column_stack((test_idx, target, lower, upper)), columns=["id", "target", "lower", "upper"])
 
-        return sub
+        return pd.DataFrame(list(zip(lower, upper)), columns = ['lower', 'upper'])
 
     def _conformal_interval(self):
 
@@ -70,7 +76,7 @@ class UncertaintyQuantifier():
             prediction = icp.predict(self.testX.to_numpy(), significance=0.05)
 
             # Print the first 5 predictions
-            return prediction
+            return pd.DataFrame(prediction)
         
         else:
 
@@ -86,16 +92,17 @@ class UncertaintyQuantifier():
             # Produce predictions for the test set, with confidence 95%
             prediction = icp.predict(self.testX.to_numpy(), significance=0.05)
 
-            return prediction
+            return pd.DataFrame(prediction, columns = ['lower_bound', 'upper_bound'])
 
     def _jacknife_interval(self):
 
         V_IJ_unbiased = fci.random_forest_error(self.model, self.trainX, self.testX)
 
-        return V_IJ_unbiased
+        return pd.DataFrame(V_IJ_unbiased, columns = ['Variance'])
 
     def get_interval(self):
 
+        print(MODEL)
         if self.interval_type == 'bootstrap':
             if self.problem_type == 'regression':
                 return self._bootstrap_interval()
@@ -116,11 +123,10 @@ class UncertaintyQuantifier():
             raise Exception('Interval Type not understood!')
     
 if __name__ == "__main__":
-    model = joblib.load(os.path.join("models", f"{MODEL}_{FOLD}.pkl"))
-    cols = joblib.load(os.path.join("models", f"{MODEL}_{FOLD}_columns.pkl"))
+    model = joblib.load(os.path.join("models", f"{MODEL}.pkl"))
+    cols = joblib.load(os.path.join("models", f"{MODEL}_columns.pkl"))
 
-    print(cols)
-
+    #print(cols)
     df_train = pd.read_csv(TRAINING_DATA)
     df_train = encode_df(df_train)
     df_train_target = df_train['target']
@@ -151,4 +157,5 @@ if __name__ == "__main__":
                                 testY = df_test_target)
 
     interval = uc_quantifier.get_interval()
-    print(interval.shape)
+    #print(interval)
+    interval.to_csv(f"models/classification_{MODEL}_vij_interval.csv", index = False)

@@ -27,30 +27,30 @@ def predict():
 
     test_idx = df.index.values
 
-    for FOLD in range(NUM_FOLDS):
-        print(FOLD)
-        df = pd.read_csv(TEST_DATA)
+    #for FOLD in range(NUM_FOLDS):
+       
+    df = pd.read_csv(TEST_DATA)
 
-        df = encode_df(df)
+    df = encode_df(df)
         #encoders = joblib.load(os.path.join("models", f"{MODEL}_{FOLD}_label_encoder.pkl"))
-        cols = joblib.load(os.path.join("models", f"{MODEL}_{FOLD}_columns.pkl"))
+    cols = joblib.load(os.path.join("models", f"{MODEL}_columns.pkl"))
         
         # data is ready to train
-        model = joblib.load(os.path.join("models", f"{MODEL}_{FOLD}.pkl"))
-        target = df['target']
-        df = df[cols]
+    model = joblib.load(os.path.join("models", f"{MODEL}.pkl"))
+    target = df['target']
+    df = df[cols]
 
-        if problem_type == 'regression':
-            preds = model.predict(df)
-        else:
-            preds = model.predict_proba(df)[:, 1]
+    if problem_type == 'regression':
+        preds = model.predict(df)
+    else:
+        preds = model.predict_proba(df)[:, 1]
 
-        if FOLD == 0:
-            predictions = preds
-        else:
-            predictions += preds
+    #if FOLD == 0:
+        #predictions = preds
+    #else:
+    predictions = preds
     
-    predictions /= NUM_FOLDS
+    #predictions /= NUM_FOLDS
 
     sub = pd.DataFrame(np.column_stack((test_idx, target, predictions)), columns=["id", "target", "prediction"])
     #feat_imps = pd.DataFrame(dict(zip(list(cols), model.feature_importances_ )).items(), columns = ['feature', 'score'])
@@ -61,5 +61,5 @@ def predict():
 
 if __name__ == "__main__":
     submission = predict()
-    submission.to_csv(f"models/{MODEL}_{loss}.csv", index=False)
+    submission.to_csv(f"models/classification_{MODEL}_vij.csv", index=False)
     #feat_imps.to_csv(f"models/{MODEL}_{selector}_feat_imps_adj.csv", index=False)

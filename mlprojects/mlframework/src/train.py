@@ -33,23 +33,25 @@ if __name__ == "__main__":
     #train_df = df[df.kfold.isin(FOLD_MAPPPING.get(FOLD))].reset_index(drop=True)
     #valid_df = df[df.kfold==FOLD].reset_index(drop=True)
 
-    ytrain = train_df.target.values
-    yvalid = valid_df.target.values
-
-    if FEATURE_SELECTION == 'YES':
-        cols = filter_df(train_df, selector)
-    else:
-        cols = list(train_df.drop(['target', 'duration'], axis = 1).columns)
-
     train_df = encode_df(train_df)
     valid_df = encode_df(valid_df)
 
-    train_df = train_df[[*cols, 'target']]
-    valid_df = valid_df[[*cols, 'target']]
+    ytrain = train_df.target.values
+    yvalid = valid_df.target.values
 
+    
+    if FEATURE_SELECTION == 'YES':
+        cols = filter_df(train_df, selector)
+        train_df = train_df[[*cols, 'target']]
+        valid_df = valid_df[[*cols, 'target']]
+    else:
+        cols = list(train_df.drop(['target'], axis = 1).columns)
+        
+    
     train_df = train_df.drop(["target"], axis=1)
     valid_df = valid_df.drop(["target"], axis=1)
 
+    print(set(valid_df.columns) - set(train_df.columns))
     valid_df = valid_df[train_df.columns]
 
     # data is ready to train
@@ -58,7 +60,8 @@ if __name__ == "__main__":
 
     if problem_type == 'regression':
         preds = model.predict(valid_df)
-        print(metrics.rmse(yvalid, preds))
+        #print(list(zip(yvalid-preds, preds)))
+        print(metrics.r2_score(yvalid, preds))
 
     else:
         preds = model.predict_proba(valid_df)[:, 1]
@@ -66,7 +69,7 @@ if __name__ == "__main__":
 
     #joblib.dump(label_encoders, f"models/{MODEL}_{FOLD}_label_encoder.pkl")
     if LOSS == 'quantile':
-        joblib.dump(model, f"models/{MODEL}_{FOLD}_{QUANTILE}.pkl")
+        joblib.dump(model, f"models/{MODEL}.pkl")
         
-    joblib.dump(model, f"models/{MODEL}_{FOLD}.pkl")
-    joblib.dump(train_df.columns, f"models/{MODEL}_{FOLD}_columns.pkl")
+    joblib.dump(model, f"models/{MODEL}.pkl")
+    joblib.dump(train_df.columns, f"models/{MODEL}_columns.pkl")

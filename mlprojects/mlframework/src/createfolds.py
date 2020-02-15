@@ -4,19 +4,20 @@ from sklearn import model_selection
 
 FEATURE_SELECTION = os.environ.get("FEATURE_SELECTION")
 CALIBRATION = os.environ.get("CALIBRATION")
+TRAINING_DATA = os.environ.get("TRAINING_DATA")
 
 if __name__ == '__main__':
-    df = pd.read_csv('input/bank-train.csv')
+    df = pd.read_csv(TRAINING_DATA)
     print(CALIBRATION)
     #print(FEATURE_SELECTION)
     if CALIBRATION == 'YES':
-        df, df_cal = model_selection.train_test_split(df, shuffle = True, stratify = df['target'], test_size = 0.3)
+        df, df_cal = model_selection.train_test_split(df, shuffle = True, test_size = 0.3)
         df_cal.to_csv('input/calibration_set.csv', index = False)
     
     df['kfold'] = -1
     df = df.sample(frac = 1).reset_index(drop = True)
 
-    df, df_valid = model_selection.train_test_split(df, shuffle = True, stratify = df['target'], test_size = 0.3)
+    df, df_valid = model_selection.train_test_split(df, shuffle = True, test_size = 0.3)
     df_valid.to_csv('input/validation_set.csv', index = False)
 
     #kf = model_selection.StratifiedKFold(n_splits = 2, shuffle = False, random_state = True)
