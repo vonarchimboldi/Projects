@@ -19,7 +19,7 @@ if 'TARGET' in df_test.columns:
     testX, testY = df_test.drop(['TARGET'], axis = 1), df_test['TARGET']
 else:
     testX = df_test
-    
+
 if PROBLEM_TYPE == 'classification':
         
     nc = NcFactory.create_nc(model, normalizer_model=KNeighborsRegressor(n_neighbors=11))	# Create a default nonconformity function
@@ -49,4 +49,4 @@ else:
     prediction = icp.predict(testX.to_numpy(), significance=0.05)
 
 sub = pd.DataFrame(prediction, columns = ['lower_bound', 'upper_bound'])
-sub.to_csv(f"{PROBLEM_TYPE}_{MODEL}_{DATASET}_intervals.csv", index = False)
+sub.to_csv(f"models/{PROBLEM_TYPE}_{MODEL}_{DATASET}_intervals.csv", index = False)

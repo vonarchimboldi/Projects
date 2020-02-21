@@ -24,4 +24,4 @@ elif PROBLEM_TYPE == 'classification':
     preds = model.predict_proba(df_test)[0]
 
 sub = pd.DataFrame(np.columnstack((preds, actuals)), columns = ['predictions', 'actuals'])
-sub.to_csv(f'{PROBLEM_TYPE}_{MODEL}_{DATASET}_outofsample.csv', index = False)
+sub.to_csv(f'models/{PROBLEM_TYPE}_{MODEL}_{DATASET}_outofsample.csv', index = False)
