@@ -103,7 +103,7 @@ class TrainModel:
 if __name__ == "__main__":
     df_train = pd.read_csv(TRAINING)
     df_valid = pd.read_csv(VALIDATION)
-    tuner = TuneParams(df_train, MODEL, PROBLEM_TYPE)
+    tuner = TuneParams(pd.concat([df_train, df_valid], axis = 0), MODEL, PROBLEM_TYPE)
     params = tuner.get_params()
 
     Learner = TrainModel(df_train, df_valid, MODEL, PROBLEM_TYPE, params)

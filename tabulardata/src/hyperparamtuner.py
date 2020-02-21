@@ -4,6 +4,7 @@ from lightgbm as LGBMClassifier, LGBMRegressor
 from catboost import CatBoostClassifier, CatBoostRegressor
 
 TRAINING = os.environ.get("TRAINING_DATA")
+VALIDATION = os.environ.get("VALIDATION_DATA")
 MODEL = os.environ.get("MODEL")
 PROBLEM_TYPE = os.environ.get("PROBLEM_TYPE")
 
@@ -102,7 +103,9 @@ class TuneParams:
 
 if __name__ == "__main__":
     df_train = pd.read_csv(TRAINING)
-    Tuner = TuneParams(df_train, model = '', problem_type = '')
+    df_valid = pd.read_csv(VALIDATION)
+    df = pd.concat([df_train, df_valid], axis = 0))
+    Tuner = TuneParams(df, model = '', problem_type = '')
 
     params = Tuner.get_params()
 
