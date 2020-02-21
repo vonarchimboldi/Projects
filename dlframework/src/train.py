@@ -1,6 +1,13 @@
 from xgboost import XGBClassifier, XGBRegressor
 import lightgbm as lgb
 from catboost import CatBoostClassifier, CatBoostRegressor
+from hyperparameter import TuneParams
+
+TRAINING = os.environ.get("TRAINING_DATA")
+VALIDATION = os.environ.get("VALIDATION_DATA")
+MODEL = os.environ.get("MODEL")
+PROBLEM_TYPE = os.environ.get("PROBLEM_TYPE")
+DATASET = os.environ.get("DATASET")
 
 class TrainModel:
     def __init__(self, training_data, validation_data, model, problem_type, params):
@@ -21,7 +28,7 @@ class TrainModel:
 
             preds = model.predict(self.validation_data.drop(['TARGET'], axis = 1))
 
-            return model, preds
+            return model, preds, self.validation_data['TARGET']
 
         elif self.problem_type == 'classification':
             model = XGBClassifier(**params)
@@ -30,7 +37,7 @@ class TrainModel:
 
             preds = model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1))[0]
 
-            return model, preds
+            return model, preds, self.validation_data['TARGET']
 
         else:
             raise Exception("Problem Type not supported")
@@ -49,7 +56,7 @@ class TrainModel:
         else:
             raise Exception("Problem Type not supported!")
 
-        return model, preds
+        return model, preds, self.validation_data['TARGET']
 
     def _catboost(self):
 
@@ -65,7 +72,7 @@ class TrainModel:
 
             preds = model.predict(self.validation_data.drop(['TARGET'], axis = 1))
 
-            return model, preds
+            return model, preds, self.validation_data['TARGET']
 
         elif self.problem_type == 'classification':
             model = CatBoostClassifier(**params)
@@ -76,7 +83,7 @@ class TrainModel:
 
             preds = model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1))[0]
 
-            return model, preds
+            return model, preds, self.validation_data['TARGET']
 
         else:
             raise Exception("Problem Type not supported")
@@ -94,8 +101,16 @@ class TrainModel:
             raise Exception("Model not supported")
 
 if __name__ == "__main__":
+    df_train = pd.read_csv(TRAINING)
+    df_valid = pd.read_csv(VALIDATION)
+    tuner = TuneParams(df_train, MODEL, PROBLEM_TYPE)
+    params = tuner.get_params()
 
-Learner = TrainModel()
+    Learner = TrainModel(df_train, df_valid, MODEL, PROBLEM_TYPE, params)
+    model, preds, actuals = Learner.train_and_validate()
 
-model, preds = Learner.train_and_validate()
+    sub = pd.DataFrame(np.column_stack((preds, actuals)), columns=["prediction", "target"])
+    sub.to_csv(f"models/{PROBLEM_TYPE}_{MODEL}_{DATASET}_insample.csv", index = False)
+    joblib.dump(model, f"models/{MODEL}.pkl")
+
 

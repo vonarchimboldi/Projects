@@ -1,14 +1,17 @@
+import os
 from xgboost import XGBClassifier, XGBRegressor
 from lightgbm as LGBMClassifier, LGBMRegressor
 from catboost import CatBoostClassifier, CatBoostRegressor
 
+TRAINING = os.environ.get("TRAINING_DATA")
+MODEL = os.environ.get("MODEL")
+PROBLEM_TYPE = os.environ.get("PROBLEM_TYPE")
+
 class TuneParams:
-    def __init__(self, training_data, validation_data, model, problem_type, params):
+    def __init__(self, training_data, model, problem_type):
         self.training_data = training_data
-        self.validation_data = validation_data
         self.model = model
         self.problem_type = problem_type
-        self.params = params
 
     def _xgboost(self):
         
@@ -98,8 +101,8 @@ class TuneParams:
             raise Exception("Model not supported")
 
 if __name__ == "__main__":
-
-    Tuner = TuneParams()
+    df_train = pd.read_csv(TRAINING)
+    Tuner = TuneParams(df_train, model = '', problem_type = '')
 
     params = Tuner.get_params()
 
