@@ -136,9 +136,12 @@ dmypy.json
 #input data and models
 data/
 models/
+catboost_info/
 
 # data files
 *.csv
 *.h5
 *.pkl
 *.pth
+*.tsv
+*.tfevents
