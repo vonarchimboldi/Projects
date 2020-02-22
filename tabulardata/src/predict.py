@@ -20,6 +20,8 @@ else:
     actuals = np.zeros(len(df_test.index))
 
 model = joblib.load(os.path.join("models", f"{MODEL}.pkl"))
+if MODEL == 'catboost':
+    model.save_model('catboost', 'cbm')
 
 if PROBLEM_TYPE == 'regression':
     preds = model.predict(df_test)

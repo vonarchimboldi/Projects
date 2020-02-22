@@ -129,6 +129,7 @@ if __name__ == "__main__":
     sub = pd.DataFrame(np.column_stack((preds, actuals)), columns=["prediction", "target"])
     sub.to_csv(f"models/{PROBLEM_TYPE}_{MODEL}_{DATASET}_insample.csv", index = False)
     joblib.dump(model, f"models/{MODEL}.pkl")
+    joblib.dump(params, f"models/params.pkl")
 
 
 
