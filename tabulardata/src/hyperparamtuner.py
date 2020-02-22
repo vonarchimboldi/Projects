@@ -1,6 +1,8 @@
 import os
+from scipy import stats
+from sklearn.model_selection import RandomizedSearchCV
 from xgboost import XGBClassifier, XGBRegressor
-from lightgbm as LGBMClassifier, LGBMRegressor
+import lightgbm as lgb
 from catboost import CatBoostClassifier, CatBoostRegressor
 
 TRAINING = os.environ.get("TRAINING_DATA")
@@ -26,15 +28,15 @@ class TuneParams:
 
         if self.problem_type == 'regression':
             model_xgb = XGBRegressor()
-            model = RandomizedSearchCV(model_xbg,
+            model = RandomizedSearchCV(model_xgb,
                                  param_distributions = param_dist, 
                                  n_iter = 25, 
-                                 scoring = 'rmse', 
+                                 scoring = 'r2', 
                                  error_score = 0, verbose = 3, n_jobs = -1)
 
         elif self.problem_type == 'classification':
             model = XGBClassifier()
-            model = RandomizedSearchCV(model_xbg,
+            model = RandomizedSearchCV(model_xgb,
                                  param_distributions = param_dist, 
                                  n_iter = 25, 
                                  scoring = 'f1', 
@@ -43,7 +45,7 @@ class TuneParams:
         else:
             raise Exception("Problem Type not supported")
 
-        model.fit(self.training_data.drop(['TRAINING'], axis = 1), self.training_data['TARGET'])
+        model.fit(self.training_data.drop(['TARGET'], axis = 1), self.training_data['TARGET'])
 
         return model.best_params_
 
@@ -56,25 +58,25 @@ class TuneParams:
             estimator = lgb.LGBMClassifier(num_leaves = 30)
 
         param_grid = {
-                'learning_rate': [0.01, 0.1, 1],
+                'learning_rate': stats.uniform(0.01, 0.1),
                 'n_estimators': [100, 150, 200, 250, 300, 350, 400, 450, 500],
         }
 
-        lgb = RandomizedSearchCV(estimator, param_grid, cv=3)
-        lgb.fit(self.training_data.drop(['TRAINING'], axis = 1), self.training_data['TARGET'])
+        model = RandomizedSearchCV(estimator, param_grid, cv=3)
+        model.fit(self.training_data.drop(['TARGET'], axis = 1), self.training_data['TARGET'])
 
-        return lgb.best_params_
+        return model.best_params_
 
     def _catboost(self):
         
         if self.problem_type == 'regression':
             model = CatBoostRegressor()
         elif self.problem_type == 'classification':
-            model = CatBoostRegressor()
+            model = CatBoostClassifier()
         else:
             raise Exception('Problem Type Not supported!')
 
-        model.fit(self.training_data.drop(['TRAINING'], axis = 1), self.training_data['TARGET'])
+        #model.fit(self.training_data.drop(['TARGET'], axis = 1), self.training_data['TARGET'])
 
         grid = {'learning_rate': [0.03, 0.1],
                 'depth': [4, 6, 10],
@@ -85,17 +87,16 @@ class TuneParams:
                                                    y=self.training_data['TARGET'])
         
         return randomized_search_result['params']
-        
 
     def get_params(self):
 
-        if self.model = "xgboost":
+        if self.model == "xgboost":
             return self._xgboost()
 
-        elif self.model = "lightgbm":
+        elif self.model == "lightgbm":
             return self._lightgbm()
 
-        elif self.model = "catboost":
+        elif self.model == "catboost":
             return self._catboost()
 
         else:
@@ -104,8 +105,8 @@ class TuneParams:
 if __name__ == "__main__":
     df_train = pd.read_csv(TRAINING)
     df_valid = pd.read_csv(VALIDATION)
-    df = pd.concat([df_train, df_valid], axis = 0))
-    Tuner = TuneParams(df, model = '', problem_type = '')
+    df = pd.concat([df_train, df_valid], axis = 0)
+    Tuner = TuneParams(df, model = MODEL, problem_type = PROBLEM_TYPE)
 
     params = Tuner.get_params()
 

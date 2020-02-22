@@ -1,7 +1,11 @@
+import os
+import numpy as np
+import pandas as pd
+import joblib
 from xgboost import XGBClassifier, XGBRegressor
 import lightgbm as lgb
 from catboost import CatBoostClassifier, CatBoostRegressor
-from hyperparameter import TuneParams
+from .hyperparamtuner import TuneParams
 
 TRAINING = os.environ.get("TRAINING_DATA")
 VALIDATION = os.environ.get("VALIDATION_DATA")
@@ -46,13 +50,24 @@ class TrainModel:
     def _lightgbm(self):
         
         params = self.params
-        train = lgb.Dataset(self.training_data.drop(['TARGET'], axis = 1), self.training_data['TARGET'])
-        valid = self.validation_data.drop(['TARGET'], axis = 1)
-        model = lgb.train(params, train_set = train, num_boost_round = 20, valid_sets = valid, early_stopping = 5)
+        
         if self.problem_type == 'regression':
-            preds = model.predict(valid, model.best_iteration)
+            model = lgb.LGBMRegressor(**params)
+
+            model = model.fit(self.training_data.drop(['TARGET'], axis = 1), self.training_data['TARGET'],
+                         eval_set = [(self.validation_data.drop(['TARGET'], axis = 1), self.validation_data['TARGET'])],
+                         eval_metric = 'l1', early_stopping_rounds = 5)
+
+            preds = model.predict(self.validation_data.drop(['TARGET'], axis = 1), model.best_iteration_)
+
         elif self.problem_type == 'classification':
-            preds = model.predict_proba(valid, model.best_iteration)[0]
+            model = lgb.LGBMClassifier(**params)
+
+            model = model.fit(self.training_data.drop(['TARGET'], axis = 1), self.training_data['TARGET'],
+                         eval_set = [(self.validation_data.drop(['TARGET'], axis = 1), self.validation_data['TARGET'])],
+                         eval_metric = 'logloss', early_stopping_rounds = 5)
+
+            preds = model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1), model.best_iteration_)[0]
         else:
             raise Exception("Problem Type not supported!")
 
@@ -61,10 +76,12 @@ class TrainModel:
     def _catboost(self):
 
         params = self.params
-        cat_features = [i for i, j in enumerate(list(self.training_data.drop['TARGET'], axis = 1).columns)) 
-                       if self.training_data[j].dtype != 'int64']
+        cat_features = [i for i, j in enumerate(list(self.training_data.drop(['TARGET'], axis = 1).columns)) if self.training_data[j].dtype != 'int64']
+        
         if self.problem_type == 'regression':
-            model = CatBoostRegressor(**params)
+            model = CatBoostRegressor()
+            print(type(model))
+            model.set_params(**params)
 
             model.fit(self.training_data.drop(["TARGET"], axis = 1), self.training_data['TARGET'],
                      cat_features = cat_features, 
@@ -75,8 +92,8 @@ class TrainModel:
             return model, preds, self.validation_data['TARGET']
 
         elif self.problem_type == 'classification':
-            model = CatBoostClassifier(**params)
-
+            model = CatBoostClassifier()
+            model.set_params(**params)
             model.fit(self.training_data.drop(["TARGET"], axis = 1), self.training_data['TARGET'],
                      cat_features = cat_features, 
                      eval_set = (self.validation_data.drop(['TARGET'], axis = 1), self.validation_data['TARGET']))
@@ -91,11 +108,11 @@ class TrainModel:
 
     def train_and_validate(self):
 
-        if self.model = "xgboost":
+        if self.model == "xgboost":
             return self._xgboost()
-        elif self.model = "lightgbm":
+        elif self.model == "lightgbm":
             return self._lightgbm()
-        elif self.model = "catboost":
+        elif self.model == "catboost":
             return self._catboost()
         else:
             raise Exception("Model not supported")
@@ -112,5 +129,6 @@ if __name__ == "__main__":
     sub = pd.DataFrame(np.column_stack((preds, actuals)), columns=["prediction", "target"])
     sub.to_csv(f"models/{PROBLEM_TYPE}_{MODEL}_{DATASET}_insample.csv", index = False)
     joblib.dump(model, f"models/{MODEL}.pkl")
+
 
 

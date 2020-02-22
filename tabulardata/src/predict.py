@@ -1,6 +1,9 @@
 import os
+import pandas as pd
+import numpy as np
+import joblib
 from xgboost import XGBClassifier, XGBRegressor
-from lightgbm as LGBMClassifier, LGBMRegressor
+from lightgbm import LGBMClassifier, LGBMRegressor
 from catboost import CatBoostClassifier, CatBoostRegressor
 
 TESTING = os.environ.get("TEST_DATA")
@@ -23,5 +26,5 @@ if PROBLEM_TYPE == 'regression':
 elif PROBLEM_TYPE == 'classification':
     preds = model.predict_proba(df_test)[0]
 
-sub = pd.DataFrame(np.columnstack((preds, actuals)), columns = ['predictions', 'actuals'])
-sub.to_csv(f'models/{PROBLEM_TYPE}_{MODEL}_{DATASET}_outofsample.csv', index = False)
+sub = pd.DataFrame(np.column_stack((preds, actuals)), columns = ['predictions', 'actuals'])
+sub.to_csv(f"models/{PROBLEM_TYPE}_{MODEL}_{DATASET}_outofsample.csv", index = False)
