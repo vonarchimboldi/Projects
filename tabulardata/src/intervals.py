@@ -25,26 +25,27 @@ calX, calY = df_cal.drop(['TARGET'], axis = 1), df_cal['TARGET']
 
 model = joblib.load(os.path.join("models", f"{MODEL}.pkl"))
 if 'TARGET' in df_test.columns:
-    testX, testY = df_test.drop(['TARGET'], axis = 1), df_test['TARGET']
+    testX, testY = df_test.drop(['id', 'TARGET'], axis = 1), df_test['TARGET']
 else:
-    testX = df_test
+    testX = df_test.drop(['id'], axis = 1)
 
 if PROBLEM_TYPE == 'classification':
+    if MODEL == 'catboost':
+        raise Exception('Cant compute inervals for CatBoostClassifier!')
         
     nc = NcFactory.create_nc(model, normalizer_model=KNeighborsRegressor(n_neighbors=11))	# Create a default nonconformity function
     icp = IcpClassifier(nc)
 
-    icp.fit(trainX, trainY)
+    icp.fit(trainX.values, trainY.values)
 
     # Calibrate the ICP using the calibration set
-    icp.calibrate(calX, calY)
+    icp.calibrate(calX.values, calY.values)
 
     # Produce predictions for the test set, with confidence 95%
     prediction = icp.predict(testX.to_numpy(), significance=0.05)
 
 
 else:
-    print(type(model))
     if MODEL == 'catboost':
         params = joblib.load("models/params.pkl")
         

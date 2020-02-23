@@ -39,8 +39,17 @@ class TrainModel:
 
             model.fit(self.training_data.drop(["TARGET"], axis = 1), self.training_data['TARGET'])
 
-            preds = model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1))[0]
+            preds = (model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1)))
 
+            return model, preds, self.validation_data['TARGET']
+
+        elif self.problem_type == 'multiclass':
+            model = XGBClassifier(**params)
+
+            model.fit(self.training_data.drop(["TARGET"], axis = 1), self.training_data['TARGET'])
+
+            preds = model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1))
+            preds = [np.argmax(p) for p in preds]
             return model, preds, self.validation_data['TARGET']
 
         else:
@@ -67,7 +76,18 @@ class TrainModel:
                          eval_set = [(self.validation_data.drop(['TARGET'], axis = 1), self.validation_data['TARGET'])],
                          eval_metric = 'logloss', early_stopping_rounds = 5)
 
-            preds = model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1), model.best_iteration_)[0]
+            preds = model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1), model.best_iteration_)[:, 1]
+
+        elif self.problem_type == 'multiclass':
+            model = lgb.LGBMClassifier(objective = 'multiclass', **params)
+
+            model = model.fit(self.training_data.drop(['TARGET'], axis = 1), self.training_data['TARGET'],
+                         eval_set = [(self.validation_data.drop(['TARGET'], axis = 1), self.validation_data['TARGET'])],
+                         eval_metric = 'multi_logloss', early_stopping_rounds = 5)
+
+            preds = model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1), model.best_iteration_)
+            preds = [np.argmax(p) for p in preds]
+        
         else:
             raise Exception("Problem Type not supported!")
 
@@ -98,7 +118,20 @@ class TrainModel:
                      cat_features = cat_features, 
                      eval_set = (self.validation_data.drop(['TARGET'], axis = 1), self.validation_data['TARGET']))
 
-            preds = model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1))[0]
+            preds = model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1))[:, 1]
+            
+
+            return model, preds, self.validation_data['TARGET']
+
+        elif self.problem_type == 'multiclass':
+            model = CatBoostClassifier(loss_function='MultiClass')
+            model.set_params(**params)
+            model.fit(self.training_data.drop(["TARGET"], axis = 1), self.training_data['TARGET'],
+                     cat_features = cat_features, 
+                     eval_set = (self.validation_data.drop(['TARGET'], axis = 1), self.validation_data['TARGET']))
+
+            preds = model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1))
+            preds = [np.argmax(p) for p in preds]
 
             return model, preds, self.validation_data['TARGET']
 

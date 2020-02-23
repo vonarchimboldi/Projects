@@ -13,12 +13,14 @@ DATASET = os.environ.get("DATASET")
 
 df_test = pd.read_csv(TESTING)
 
-if 'TARGET' in df_test.columns:
-    actuals = df_test['TARGET']
-    df_test = df_test.drop(['TARGET'], axis = 1)
+if 'class' in df_test.columns:
+    actuals = df_test['class']
+    df_test = df_test.drop(['class'], axis = 1)
 else:
+    df_test = df_test
     actuals = np.zeros(len(df_test.index))
 
+print(df_test.columns)
 model = joblib.load(os.path.join("models", f"{MODEL}.pkl"))
 if MODEL == 'catboost':
     model.save_model('catboost', 'cbm')
@@ -26,7 +28,12 @@ if MODEL == 'catboost':
 if PROBLEM_TYPE == 'regression':
     preds = model.predict(df_test)
 elif PROBLEM_TYPE == 'classification':
-    preds = model.predict_proba(df_test)[0]
+    preds = model.predict_proba(df_test)[:, 1]
+elif PROBLEM_TYPE == 'multiclass':
+    preds = model.predict_proba(df_test)
+    preds = [np.argmax(p) for p in preds]
+
+
 
 sub = pd.DataFrame(np.column_stack((preds, actuals)), columns = ['predictions', 'actuals'])
 sub.to_csv(f"models/{PROBLEM_TYPE}_{MODEL}_{DATASET}_outofsample.csv", index = False)

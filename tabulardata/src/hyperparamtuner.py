@@ -35,12 +35,21 @@ class TuneParams:
                                  error_score = 0, verbose = 3, n_jobs = -1)
 
         elif self.problem_type == 'classification':
-            model = XGBClassifier()
+            model_xgb = XGBClassifier()
             model = RandomizedSearchCV(model_xgb,
                                  param_distributions = param_dist, 
                                  n_iter = 25, 
                                  scoring = 'f1', 
                                  error_score = 0, verbose = 3, n_jobs = -1)
+        
+        elif self.problem_type == 'multiclass':
+            model_xgb = XGBClassifier()
+            model = RandomizedSearchCV(model_xgb,
+                                 param_distributions = param_dist, 
+                                 n_iter = 25, 
+                                 scoring = 'f1_weighted', 
+                                 error_score = 0, verbose = 3, n_jobs = -1)
+
 
         else:
             raise Exception("Problem Type not supported")
@@ -57,9 +66,14 @@ class TuneParams:
         elif self.problem_type == 'classification':
             estimator = lgb.LGBMClassifier(num_leaves = 30)
 
+        elif self.problem_type == 'multiclass':
+            estimator = lgb.LGBMClassifier(objective = 'multiclass', num_leaves = 30)
+
         param_grid = {
+                'objective': 'multiclass',
+                'metric': ['multi_error'],
                 'learning_rate': stats.uniform(0.01, 0.1),
-                'n_estimators': [100, 150, 200, 250, 300, 350, 400, 450, 500],
+                'n_estimators': [100, 150, 200, 250, 300, 350, 400, 450, 500]
         }
 
         model = RandomizedSearchCV(estimator, param_grid, cv=3)
@@ -73,12 +87,14 @@ class TuneParams:
             model = CatBoostRegressor()
         elif self.problem_type == 'classification':
             model = CatBoostClassifier()
+        elif self.problem_type == 'multiclass':
+            model = CatBoostClassifier(loss_function='MultiClass')
         else:
             raise Exception('Problem Type Not supported!')
 
         #model.fit(self.training_data.drop(['TARGET'], axis = 1), self.training_data['TARGET'])
 
-        grid = {'learning_rate': [0.03, 0.1],
+        grid = {'learning_rate': stats.uniform(0.01, 0.2),
                 'depth': [4, 6, 10],
                 'l2_leaf_reg': [1, 3, 5, 7, 9]}
 
