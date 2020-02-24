@@ -39,7 +39,7 @@ class TrainModel:
 
             model.fit(self.training_data.drop(["TARGET"], axis = 1), self.training_data['TARGET'])
 
-            preds = (model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1)))
+            preds = model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1))[:, 1]
 
             return model, preds, self.validation_data['TARGET']
 
@@ -74,9 +74,9 @@ class TrainModel:
 
             model = model.fit(self.training_data.drop(['TARGET'], axis = 1), self.training_data['TARGET'],
                          eval_set = [(self.validation_data.drop(['TARGET'], axis = 1), self.validation_data['TARGET'])],
-                         eval_metric = 'logloss', early_stopping_rounds = 5)
+                         eval_metric = 'logloss', early_stopping_rounds = 25)
 
-            preds = model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1), model.best_iteration_)[:, 1]
+            preds = model.predict_proba(self.validation_data.drop(['TARGET'], axis = 1))[:, 1]
 
         elif self.problem_type == 'multiclass':
             model = lgb.LGBMClassifier(objective = 'multiclass', **params)

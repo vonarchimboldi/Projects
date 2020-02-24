@@ -64,16 +64,14 @@ class TuneParams:
             estimator = lgb.LGBMRegressor(num_leaves = 30)
 
         elif self.problem_type == 'classification':
-            estimator = lgb.LGBMClassifier(num_leaves = 30)
+            estimator = lgb.LGBMClassifier(objective = 'binary', num_leaves = 30)
 
         elif self.problem_type == 'multiclass':
             estimator = lgb.LGBMClassifier(objective = 'multiclass', num_leaves = 30)
 
         param_grid = {
-                'objective': 'multiclass',
-                'metric': ['multi_error'],
-                'learning_rate': stats.uniform(0.01, 0.1),
-                'n_estimators': [100, 150, 200, 250, 300, 350, 400, 450, 500]
+                'learning_rate': stats.uniform(0.01, 0.2),
+                'n_estimators': [400, 500, 520, 540, 560, 580, 600, 700, 800, 1000]
         }
 
         model = RandomizedSearchCV(estimator, param_grid, cv=3)

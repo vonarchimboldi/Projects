@@ -13,11 +13,11 @@ DATASET = os.environ.get("DATASET")
 
 df_test = pd.read_csv(TESTING)
 
-if 'class' in df_test.columns:
-    actuals = df_test['class']
-    df_test = df_test.drop(['class'], axis = 1)
+if 'TARGET' in df_test.columns:
+    actuals = df_test["TARGET"]
+    df_test = df_test.drop(["id", "TARGET"], axis = 1)
 else:
-    df_test = df_test
+    df_test = df_test.drop(['id'], axis = 1)
     actuals = np.zeros(len(df_test.index))
 
 print(df_test.columns)
